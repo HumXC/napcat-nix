@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-appimage = {
       url = "github:ralismark/nix-appimage";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,7 +15,7 @@
       in
       {
         devShells.default = pkgs.mkShell { };
-        packages.default = {
+        packages = {
           napcat = napcat;
         };
       });
