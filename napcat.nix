@@ -5,7 +5,7 @@ let
 
   sources = {
     napcat_url = "https://github.com/NapNeko/NapCatQQ/releases/download/v${napcat_version}/NapCat.Shell.zip";
-    napcat_hash = "sha256-lLBPVKRBc4LGWMDQOIX9A0HBP0htM1D3XT0YJgJgrSo=";
+    napcat_hash = "sha256-am31iewbX/Uk6pnDrTlRoDCvUWRtQ+5dWIwTJGaGMxU=";
     qq_amd64_url = "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_${qq_version}_amd64_01.deb";
     qq_amd64_hash = "sha256-xBGSSxXDu+qUwj203i3iAkfI97iLtGOuGMGfEU6kCyQ=";
     qq_arm64_url = "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_${qq_version}_arm64_01.deb";
