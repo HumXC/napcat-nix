@@ -11,8 +11,7 @@ jobs:
               with:
                   github_access_token: ${{ secrets.GITHUB_TOKEN }}
             - run: nix bundle --out-link ./output --bundler github:ralismark/nix-appimage .#napcat
-            - run: cp -L ./output ./napcat.AppImage
             - uses: actions/upload-artifact@v4
               with:
-                  name: my-artifact
-                  path: ./napcat.AppImage
+                  name: napcat.AppImage
+                  path: ./output
