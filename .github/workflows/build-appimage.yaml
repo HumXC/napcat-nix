@@ -1,4 +1,4 @@
-name: "Test"
+name: "Build and release"
 on:
     push:
         tags:
@@ -14,10 +14,7 @@ jobs:
                   github_access_token: ${{ secrets.GITHUB_TOKEN }}
             - name: Build
               run: nix bundle --bundler github:ralismark/nix-appimage .#napcat
-            # - uses: actions/upload-artifact@v4
-            #   with:
-            #       name: napcat.AppImage
-            #       path: ./output
+
             - name: Name | Name Package
               run: |
                   TAG_NAME="${GITHUB_REF#refs/tags/}"
