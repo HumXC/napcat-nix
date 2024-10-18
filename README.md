@@ -4,6 +4,7 @@
 
 运行之后，数据文件保存在 $HOME/.config/napcat
 
+TODO: 将 xvfb 也打包进去
 ## 如何运行
 
 1. 从 Release 下载 .AppImage 文件，下载缓慢可以使用代理加速: https://ghp.ci
@@ -52,3 +53,5 @@
 ## 借鉴
 
 https://github.com/initialencounter/napcat.nix
+
+与以上仓库不同，该仓库仅是将 NapCap 和 QQ 打包在一起，并未提供沙盒环境
