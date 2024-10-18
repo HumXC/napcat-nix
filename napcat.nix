@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 let
-  napcat_version = "2.6.23";
+  napcat_version = "2.6.27";
   qq_version = "3.2.12_240927";
 
   sources = {
