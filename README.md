@@ -43,7 +43,7 @@ nix run github:HumXC/napcat-nix#napcat
 ### Docker
 
 ```bash
-docker run -it --rm -p 6099:6099 -v <数据目录>:/root/.config/napcat-qq/.config humxc/napcat:latest
+docker run -it --rm -p 6099:6099 -v <数据目录>:/.config/napcat-qq/.config humxc/napcat:latest
 ```
 
 #### Docker Compose
@@ -53,9 +53,11 @@ services:
   napcat:
     image: humxc/napcat:latest
     volumes:
-      - ./data:/root/.config/napcat-qq/.config
+      - ./data:/.config/napcat-qq/.config
     ports:
       - 6099:6099
+    hostname: Napcat
+    # mac_address: xxxxxxxxxxxxx # 若需要固定 MAC 地址，请指定
 ```
 
 ### AppImage
