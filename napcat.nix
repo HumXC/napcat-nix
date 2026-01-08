@@ -1,63 +1,50 @@
-{ pkgs, lib, ... }:
-let
-  napcat_version = "2.6.27";
-  qq_version = "3.2.12_240927";
-
-  sources = {
-    napcat_url = "https://github.com/NapNeko/NapCatQQ/releases/download/v${napcat_version}/NapCat.Shell.zip";
-    napcat_hash = "sha256-UNejKNFUPGx61ERAY0efS0ePnrFm6IsA8UwcdhBKlg0=";
-    qq_amd64_url = "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_${qq_version}_amd64_01.deb";
-    qq_amd64_hash = "sha256-xBGSSxXDu+qUwj203i3iAkfI97iLtGOuGMGfEU6kCyQ=";
-    qq_arm64_url = "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_${qq_version}_arm64_01.deb";
-    qq_arm64_hash = "sha256-VfM+p2cTNkDZc7sTftfTuRSMKVWwE6TerW25pA1MIR0=";
-  };
-  napcat-shell-zip = pkgs.fetchurl {
-    url = sources.napcat_url;
-    hash = sources.napcat_hash;
-  };
-
-  srcs = {
-    x86_64-linux = pkgs.fetchurl {
-      url = sources.qq_amd64_url;
-      hash = sources.qq_amd64_hash;
-    };
-    aarch64-linux = pkgs.fetchurl {
-      url = sources.qq_arm64_url;
-      hash = sources.qq_arm64_hash;
-    };
-  };
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  sources = import ./sources.nix {inherit (pkgs) fetchurl;};
+  napcat-shell-zip = sources.napcat.src;
 
   currentSystem = pkgs.stdenv.hostPlatform.system;
-  src = srcs.${currentSystem} or (throw "Unsupported system: ${currentSystem}");
+  src = sources.qq.${currentSystem}.src or (throw "Unsupported system: ${currentSystem}");
+  version = sources.qq.${currentSystem}.version or (throw "Unsupported system: ${currentSystem}");
+
   patched = pkgs.qq.overrideAttrs (old: {
-    buildInputs = old.buildInputs ++ [ pkgs.unzip ]; # 添加 unzip 到依赖中
-    version = "3.2.12-2024.9.27";
-    inherit src;
+    buildInputs = old.buildInputs ++ [pkgs.unzip]; # 添加 unzip 到依赖中
+    inherit version src;
     postFixup = ''
-      mkdir -p $out/opt/QQ/resources/app/napcat
-      napcat_dir=$out/opt/QQ/resources/app/napcat
+      mkdir -p $out/opt/QQ/resources/app/app_launcher/napcat
+      napcat_dir=$out/opt/QQ/resources/app/app_launcher/napcat
       unzip ${napcat-shell-zip} -d $napcat_dir
+
+      # 移动 qqnt.json 到正确的位置并重命名为 package.json
+      # 注意：原始的 package.json 位于 resources/app/package.json
       rm -rf $out/opt/QQ/resources/app/package.json
       mv $napcat_dir/qqnt.json $out/opt/QQ/resources/app/package.json
-      rm $napcat_dir/loadNapCat.js
-      echo "import os$1 from 'os';
-      (async () => {await import(os$1.homedir() + '/.config/napcat/napcat.mjs');})();" > $out/opt/QQ/resources/app/loadNapCat.js
+
+      # 修改 loadNapCat.js
+      # 官方脚本中：
+      # echo "(async () => {await import('file:///' + TARGET_FOLDER + '/napcat/napcat.mjs');})();" > QQ_BASE_PATH + "/resources/app/loadNapCat.js"
+      # TARGET_FOLDER 是 resources/app/app_launcher
+
+      echo "(async () => {await import('file:///' + require('path').join(require('os').homedir(), '.config/napcat/napcat.mjs'));})();" > $out/opt/QQ/resources/app/loadNapCat.js
     '';
-    meta = { };
+    meta = {};
   });
 in
-(pkgs.writeShellApplication {
-  name = "napcat";
-  runtimeInputs = [ patched pkgs.coreutils ];
-  text = ''
-    if [ ! -d "$HOME/.config/napcat" ]; then
-      mkdir -p "$HOME/.config"
-      cp -r ${patched}/opt/QQ/resources/app/napcat "$HOME/.config"
-      chmod -R u+w "$HOME/.config/napcat"
-      echo "Directory $HOME/.config/napcap created."
-    fi
-    exec qq --no-sandbox
-  '';
-  meta = { };
-})
-  
+  pkgs.writeShellApplication {
+    name = "napcat";
+    runtimeInputs = [patched pkgs.coreutils];
+    text = ''
+      export HOME="$HOME/.config/napcat-qq"
+      if [ ! -d "$HOME/.config/napcat" ]; then
+        mkdir -p "$HOME/.config"
+        # 复制初始配置
+        cp -r ${patched}/opt/QQ/resources/app/app_launcher/napcat "$HOME/.config"
+        chmod -R u+w "$HOME/.config/napcat"
+        echo "Directory $HOME/.config/napcat created."
+      fi
+      exec qq --no-sandbox "$@"
+    '';
+  }
