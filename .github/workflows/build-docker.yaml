@@ -1,0 +1,69 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: napcat
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image with Nix
+        run: nix build .#dockerImage
+
+      - name: Load Docker Image
+        run: docker load < result
+
+      - name: Tag and Push Docker Image
+        run: |
+          # Image loaded from nix build is named "napcat:latest" defined in flake.nix
+          SOURCE_IMAGE="napcat:latest"
+
+          # Target image name in GHCR (must be lowercase)
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[A-Z]' '[a-z]')
+          TARGET_IMAGE="${{ env.REGISTRY }}/$OWNER/${{ env.IMAGE_NAME }}"
+
+          # Determine version
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="latest"
+          fi
+
+          echo "Tagging $SOURCE_IMAGE as $TARGET_IMAGE:$VERSION"
+          docker tag $SOURCE_IMAGE $TARGET_IMAGE:$VERSION
+          docker push $TARGET_IMAGE:$VERSION
+
+          # If it is a version tag, also push 'latest'
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+             echo "Also pushing $TARGET_IMAGE:latest"
+             docker tag $SOURCE_IMAGE $TARGET_IMAGE:latest
+             docker push $TARGET_IMAGE:latest
+          fi
