@@ -101,3 +101,11 @@ jobs:
              push_image $GHCR_TARGET "latest"
              push_image $DOCKERHUB_TARGET "latest"
           fi
+
+      - name: Update Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          readme-filepath: ./README.md
