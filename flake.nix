@@ -13,6 +13,7 @@
       napcat = pkgs.callPackage ./napcat.nix {};
     in {
       packages = {
+        default = napcat;
         napcat = napcat;
         dockerImage = pkgs.dockerTools.buildImage {
           name = "napcat";
